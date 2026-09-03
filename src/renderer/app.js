@@ -342,6 +342,7 @@ class VisualizerApp {
       bass: this.analyzer.bass,
       mid: this.analyzer.mid,
       treble: this.analyzer.treble,
+      beat: this.analyzer.beat,
       time: now - this.startTime,
       dt: delta,
     }, {

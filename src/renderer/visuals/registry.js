@@ -4,10 +4,14 @@ import { wavePresets } from './wave-presets.js';
 import { barPresets } from './bar-presets.js';
 import { dotPresets } from './dot-presets.js';
 import { mirrorPresets } from './mirror-presets.js';
+import { themePresets } from './themes/index.js';
 
 /**
  * Reading order of the reference sheet (left to right, top to bottom), so the
- * arrow keys walk the presets in the same order the user saw them.
+ * arrow keys walk the presets in the same order the user saw them. The genre
+ * themes follow, grouped together at the end: they are scenes rather than
+ * spectrum plots, so mixing them into the sheet order would break the run of
+ * matching styles the arrow keys walk through.
  */
 const ORDER = [
   'wave-line',
@@ -26,10 +30,21 @@ const ORDER = [
   'spiky-wave',
   'layered-spectrum',
   'spindle-wave',
+  'jazz-bluenote',
+  'rock-stage',
+  'pop-bubble',
+  'citypop-drive',
+  'country-road',
+  'edm-drop',
+  'lofi-tape',
+  'hiphop-boombap',
 ];
 
 const byId = new Map(
-  [...wavePresets, ...barPresets, ...dotPresets, ...mirrorPresets].map((p) => [p.id, p])
+  [...wavePresets, ...barPresets, ...dotPresets, ...mirrorPresets, ...themePresets].map((p) => [
+    p.id,
+    p,
+  ])
 );
 
 /** @type {Array<{id: string, name: string, draw: Function}>} */

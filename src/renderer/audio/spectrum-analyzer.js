@@ -45,12 +45,19 @@ export class SpectrumAnalyzer {
     this.bass = 0;
     this.mid = 0;
     this.treble = 0;
+    /** Kick pulse: snaps to 1 on a low-end onset, then falls back to 0. */
+    this.beat = 0;
+    /** User gain on top of the automatic levelling, 1 = as captured. */
+    this.sensitivity = 1;
 
     this._rawWave = new Float32Array(waveformPoints);
     this._smoothWave = new Float32Array(waveformPoints);
     this._peakVelocity = new Float32Array(bandCount);
     this._binRanges = null; // [startBin, endBin] per band
     this._autoGain = 1;
+    this._bassFloor = 0;
+    this._beatHold = 0;
+    this._prevBass = 0;
   }
 
   /**
@@ -59,19 +66,26 @@ export class SpectrumAnalyzer {
    */
   buildBandMap(binWidthHz, binCount) {
     const ranges = new Array(this.bandCount);
+    const lastBin = binCount - 1;
+    // An endpoint below 32 kHz — a Bluetooth headset in hands-free mode reports
+    // 16 kHz — has no bins at all above its own Nyquist. Spreading bands up to
+    // MAX_HZ regardless walked every high band past the end of the buffer,
+    // where reads return undefined and the top half of every preset sits
+    // permanently flat. Fold the range onto what the device actually has.
+    const topHz = Math.min(MAX_HZ, lastBin * binWidthHz);
     const logMin = Math.log2(MIN_HZ);
-    const logMax = Math.log2(MAX_HZ);
+    const logMax = Math.log2(Math.max(MIN_HZ * 2, topHz));
 
-    let previousEnd = Math.max(1, Math.floor(MIN_HZ / binWidthHz));
+    let previousEnd = Math.min(lastBin, Math.max(1, Math.floor(MIN_HZ / binWidthHz)));
 
     for (let i = 0; i < this.bandCount; i += 1) {
       const upperHz = 2 ** (logMin + ((i + 1) / this.bandCount) * (logMax - logMin));
-      let end = Math.min(binCount - 1, Math.round(upperHz / binWidthHz));
+      let end = Math.min(lastBin, Math.round(upperHz / binWidthHz));
       // Guarantee every band owns at least one bin, otherwise the low end
       // renders as dead gaps at high band counts.
       if (end < previousEnd) end = previousEnd;
       ranges[i] = [previousEnd, end];
-      previousEnd = end + 1;
+      previousEnd = Math.min(lastBin, end + 1);
     }
 
     this._binRanges = ranges;
@@ -113,6 +127,7 @@ export class SpectrumAnalyzer {
       // Gentle high-frequency tilt: music has far less energy up top, so
       // without it the right half of every preset stays flat.
       target *= 1 + (i / this.bandCount) * 0.55;
+      target *= this.sensitivity;
       target = Math.min(1, target);
 
       const current = this.bands[i];
@@ -140,7 +155,41 @@ export class SpectrumAnalyzer {
     this.mid = midCount ? midSum / midCount : 0;
     this.treble = trebleCount ? trebleSum / trebleCount : 0;
 
+    this._updateBeat(dt);
     this._updateWaveform(timeDomainData, dt);
+  }
+
+  /**
+   * Fires `beat` on low-end onsets, which the themed presets use for kick
+   * accents: screen shake, strobes, shockwaves.
+   *
+   * The test is bass *above its own recent floor*, not bass above a fixed
+   * level. A sustained bassline drags the floor up with it and stops firing,
+   * while a kick — a jump over that floor — still fires, so the pulse follows
+   * the drum rather than the loudness.
+   */
+  _updateBeat(dt) {
+    this._bassFloor += (this.bass - this._bassFloor) * (1 - Math.exp(-dt / 0.32));
+    // Linear fall over ~0.16s. An exponential tail never quite reaches zero, so
+    // a preset scaling a flash by `beat` would keep a faint glow lit forever.
+    this.beat = Math.max(0, this.beat - dt / 0.16);
+    this._beatHold = Math.max(0, this._beatHold - dt);
+
+    // Rate of climb, not just "above the floor". The decaying tail of a kick
+    // still sits well clear of the floor for a tenth of a second, so an
+    // excess-alone test fires twice per hit, and a sound that merely switches
+    // on climbs toward its own level for long enough to fire several times.
+    // A kick's attack is an order of magnitude steeper than either.
+    const rise = (this.bass - this._prevBass) / dt;
+    this._prevBass = this.bass;
+
+    // Refractory window on top, or the several frames an attack takes to climb
+    // each fire in turn and the accent stutters instead of hitting once.
+    if (this._beatHold > 0) return;
+    if (rise > 1.2 && this.bass > 0.12 && this.bass - this._bassFloor > 0.045) {
+      this.beat = 1;
+      this._beatHold = 0.12;
+    }
   }
 
   /** Peak marker rises instantly, then falls under constant acceleration. */
@@ -215,7 +264,8 @@ export class SpectrumAnalyzer {
     this._autoGain += (targetGain - this._autoGain) * 0.05;
 
     for (let i = 0; i < points; i += 1) {
-      this.waveform[i] = Math.max(-1, Math.min(1, this._smoothWave[i] * this._autoGain));
+      const scaled = this._smoothWave[i] * this._autoGain * this.sensitivity;
+      this.waveform[i] = Math.max(-1, Math.min(1, scaled));
     }
   }
 }
