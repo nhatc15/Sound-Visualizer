@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:;"
+    />
+    <title>Sound Visualizer</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div id="app">
+      <header id="titlebar">
+        <span class="title">Sound Visualizer</span>
+        <div class="window-buttons">
+          <button id="btn-minimize" title="Thu nhỏ" aria-label="Thu nhỏ">&#8211;</button>
+          <button id="btn-close" class="danger" title="Đóng" aria-label="Đóng">&#10005;</button>
+        </div>
+      </header>
+
+      <main id="stage">
+        <canvas id="visualizer"></canvas>
+
+        <div id="error" class="overlay-panel hidden">
+          <h2>Không bắt được âm thanh</h2>
+          <p id="error-message"></p>
+          <button id="btn-retry" class="primary">Thử lại</button>
+        </div>
+
+        <div id="silence-hint" class="floating-hint hidden">Chưa có âm thanh nào đang phát</div>
+      </main>
+
+      <footer id="controls">
+        <button id="btn-prev" title="Hiệu ứng trước (←)" aria-label="Hiệu ứng trước">&#9664;</button>
+        <select id="preset-select" aria-label="Chọn hiệu ứng"></select>
+        <button id="btn-next" title="Hiệu ứng sau (→)" aria-label="Hiệu ứng sau">&#9654;</button>
+
+        <select id="layout-select" aria-label="Số hiệu ứng hiển thị cùng lúc" title="Số hiệu ứng hiển thị cùng lúc (G)"></select>
+        <select id="cell-select" class="hidden" aria-label="Chọn ô để đổi hiệu ứng" title="Ô đang chỉnh — hoặc bấm thẳng vào ô trên màn hình"></select>
+
+        <span class="spacer"></span>
+
+        <label class="toggle">
+          <input type="checkbox" id="chk-auto" />
+          <span>Tự đổi</span>
+        </label>
+        <button id="btn-overlay" title="Chế độ overlay nổi (Ctrl+O)">Overlay</button>
+        <button id="btn-fullscreen" title="Toàn màn hình (F11)">Toàn màn hình</button>
+      </footer>
+
+      <div id="overlay-bar">
+        <span id="overlay-preset-name"></span>
+        <button id="btn-overlay-prev" title="Hiệu ứng trước">&#9664;</button>
+        <button id="btn-overlay-next" title="Hiệu ứng sau">&#9654;</button>
+        <button id="btn-overlay-fullscreen" title="Toàn màn hình (F11)">&#9974;</button>
+        <button id="btn-overlay-exit" title="Về cửa sổ thường (Ctrl+O)">&#9635;</button>
+        <button id="btn-overlay-close" class="danger" title="Đóng">&#10005;</button>
+      </div>
+    </div>
+
+    <script type="module" src="app.js"></script>
+  </body>
+</html>

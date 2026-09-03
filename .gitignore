@@ -1,0 +1,15 @@
+# Dependencies
+node_modules/
+
+# Build output (electron-builder; ~580MB of packaged binaries)
+dist/
+
+# Editor / OS noise
+.vscode/
+.idea/
+Thumbs.db
+Desktop.ini
+*.log
+
+# Local agent scratch
+plans/

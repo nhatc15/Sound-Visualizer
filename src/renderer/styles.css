@@ -1,0 +1,322 @@
+:root {
+  --bg: #1c0b30;
+  --chrome: #170826;
+  --chrome-hover: #2a1246;
+  --text: #e9dcff;
+  --text-dim: #a08cc4;
+  --accent: #c93bff;
+  --danger: #ff3b6b;
+  --radius: 8px;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body {
+  height: 100%;
+  overflow: hidden;
+  background: transparent;
+  color: var(--text);
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  font-size: 13px;
+  user-select: none;
+  cursor: default;
+}
+
+#app {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+/* ---------- Windowed chrome ---------- */
+
+#titlebar {
+  display: flex;
+  align-items: center;
+  height: 32px;
+  padding-left: 12px;
+  background: var(--chrome);
+  border-bottom: 1px solid #2a1246;
+  -webkit-app-region: drag;
+  flex: none;
+}
+
+#titlebar .title {
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  color: var(--text-dim);
+}
+
+.window-buttons {
+  margin-left: auto;
+  display: flex;
+  -webkit-app-region: no-drag;
+}
+
+.window-buttons button {
+  width: 44px;
+  height: 32px;
+  border: 0;
+  background: transparent;
+  color: var(--text-dim);
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.window-buttons button:hover {
+  background: var(--chrome-hover);
+  color: var(--text);
+}
+
+.window-buttons button.danger:hover {
+  background: var(--danger);
+  color: #fff;
+}
+
+/* ---------- Stage ---------- */
+
+#stage {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  background: var(--bg);
+}
+
+#visualizer {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.overlay-panel {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 32px;
+  text-align: center;
+  background: rgba(28, 11, 48, 0.94);
+  backdrop-filter: blur(2px);
+}
+
+.overlay-panel.hidden {
+  display: none;
+}
+
+.overlay-panel h2 {
+  font-size: 18px;
+  color: var(--danger);
+}
+
+.overlay-panel p {
+  max-width: 460px;
+  color: var(--text-dim);
+  line-height: 1.55;
+}
+
+button.primary {
+  padding: 10px 28px;
+  border: 0;
+  border-radius: var(--radius);
+  background: linear-gradient(90deg, #a34bff, #ff2bd1);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+button.primary:hover {
+  filter: brightness(1.15);
+}
+
+.floating-hint {
+  position: absolute;
+  left: 50%;
+  bottom: 16px;
+  transform: translateX(-50%);
+  padding: 6px 14px;
+  border-radius: 20px;
+  background: rgba(23, 8, 38, 0.85);
+  color: var(--text-dim);
+  font-size: 11.5px;
+  pointer-events: none;
+}
+
+.floating-hint.hidden {
+  display: none;
+}
+
+/* ---------- Bottom controls ---------- */
+
+#controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 44px;
+  padding: 0 12px;
+  background: var(--chrome);
+  border-top: 1px solid #2a1246;
+  flex: none;
+}
+
+#controls .spacer {
+  flex: 1;
+}
+
+#controls button,
+#controls select {
+  height: 28px;
+  padding: 0 12px;
+  border: 1px solid #35195a;
+  border-radius: var(--radius);
+  background: #21103a;
+  color: var(--text);
+  font-size: 12px;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+#controls button:hover,
+#controls select:hover {
+  background: var(--chrome-hover);
+  border-color: var(--accent);
+}
+
+/* The native arrow renders as a bright system-coloured wedge that clashes with
+   the dark bar, so draw our own. */
+#controls select {
+  appearance: none;
+  padding-right: 26px;
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%23a08cc4' stroke-width='1.6' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 9px center;
+}
+
+#controls select:focus-visible,
+#controls button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+#preset-select {
+  min-width: 178px;
+}
+
+#layout-select {
+  min-width: 118px;
+}
+
+#cell-select {
+  min-width: 74px;
+}
+
+#cell-select.hidden {
+  display: none;
+}
+
+#controls select option {
+  background: #21103a;
+  color: var(--text);
+}
+
+#controls button.active {
+  border-color: var(--accent);
+  background: #3a1a63;
+}
+
+.toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-dim);
+  cursor: pointer;
+}
+
+.toggle input {
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+body.fullscreen #titlebar {
+  display: none;
+}
+
+/* ---------- Overlay mode ---------- */
+
+#overlay-bar {
+  display: none;
+}
+
+body.overlay #titlebar,
+body.overlay #controls {
+  display: none;
+}
+
+body.overlay #stage {
+  background: transparent;
+}
+
+body.overlay .overlay-panel {
+  background: rgba(28, 11, 48, 0.9);
+  border-radius: 12px;
+}
+
+body.overlay #overlay-bar {
+  position: absolute;
+  top: 6px;
+  right: 8px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 6px;
+  border-radius: 18px;
+  background: rgba(23, 8, 38, 0.55);
+  opacity: 0;
+  transition: opacity 0.18s ease;
+  -webkit-app-region: no-drag;
+}
+
+body.overlay:hover #overlay-bar {
+  opacity: 1;
+}
+
+#overlay-bar #overlay-preset-name {
+  padding: 0 8px;
+  color: var(--text-dim);
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+#overlay-bar button {
+  width: 24px;
+  height: 24px;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--text-dim);
+  font-size: 10px;
+  cursor: pointer;
+}
+
+#overlay-bar button:hover {
+  background: var(--chrome-hover);
+  color: var(--text);
+}
+
+#overlay-bar button.danger:hover {
+  background: var(--danger);
+  color: #fff;
+}
+
+/* The whole overlay surface drags, except the button strip above. */
+body.overlay #stage {
+  -webkit-app-region: drag;
+}
