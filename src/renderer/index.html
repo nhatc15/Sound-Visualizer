@@ -22,6 +22,44 @@
       <main id="stage">
         <canvas id="visualizer"></canvas>
 
+        <div id="splash" class="screen">
+          <div class="splash-mark">
+            <span></span><span></span><span></span><span></span><span></span>
+          </div>
+          <h1 class="splash-title">Sound Visualizer</h1>
+          <p class="splash-tagline">Hiệu ứng theo âm thanh hệ thống, theo thời gian thực</p>
+        </div>
+
+        <div id="home" class="screen">
+          <div class="home-panel">
+            <h1 class="home-title">Sound Visualizer</h1>
+            <p class="home-subtitle">
+              16 hiệu ứng neon chạy theo đúng thứ máy bạn đang phát.
+            </p>
+            <div class="home-actions">
+              <button id="btn-home-start" class="primary">Bắt đầu</button>
+              <button id="btn-home-settings">Cài đặt</button>
+              <button id="btn-home-quit" class="quiet">Thoát</button>
+            </div>
+            <p class="home-hint">
+              Đang xem hiệu ứng? Bấm <kbd>Esc</kbd> để về đây bất cứ lúc nào.
+            </p>
+          </div>
+        </div>
+
+        <div id="settings" class="screen">
+          <div class="settings-panel">
+            <header class="settings-head">
+              <h2>Cài đặt</h2>
+              <button id="btn-settings-back" title="Quay lại (Esc)">Xong</button>
+            </header>
+            <div id="settings-body"></div>
+            <footer class="settings-foot">
+              <button id="btn-settings-reset" class="quiet">Đặt lại mặc định</button>
+            </footer>
+          </div>
+        </div>
+
         <div id="error" class="overlay-panel hidden">
           <h2>Không bắt được âm thanh</h2>
           <p id="error-message"></p>
@@ -32,6 +70,7 @@
       </main>
 
       <footer id="controls">
+        <button id="btn-home" class="icon" title="Về trang chủ (Esc)" aria-label="Về trang chủ">&#8962;</button>
         <button id="btn-prev" title="Hiệu ứng trước (←)" aria-label="Hiệu ứng trước">&#9664;</button>
         <select id="preset-select" aria-label="Chọn hiệu ứng"></select>
         <button id="btn-next" title="Hiệu ứng sau (→)" aria-label="Hiệu ứng sau">&#9654;</button>
@@ -45,6 +84,7 @@
           <input type="checkbox" id="chk-auto" />
           <span>Tự đổi</span>
         </label>
+        <button id="btn-settings" class="icon" title="Cài đặt" aria-label="Cài đặt">&#9881;</button>
         <button id="btn-overlay" title="Chế độ overlay nổi (Ctrl+O)">Overlay</button>
         <button id="btn-fullscreen" title="Toàn màn hình (F11)">Toàn màn hình</button>
       </footer>

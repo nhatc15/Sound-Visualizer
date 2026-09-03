@@ -70,6 +70,17 @@ export class AudioEngine {
     this.timeDomainData = new Uint8Array(this.analyser.fftSize);
   }
 
+  /**
+   * Live analyser smoothing. Applied to a running capture immediately, and
+   * remembered so the next start() comes up with the same value.
+   * @param {number} value 0 (raw and jumpy) .. 0.95 (heavily averaged).
+   */
+  setSmoothing(value) {
+    if (!Number.isFinite(value)) return;
+    this.smoothing = Math.min(0.95, Math.max(0, value));
+    if (this.analyser) this.analyser.smoothingTimeConstant = this.smoothing;
+  }
+
   /** Refreshes both buffers in place. Call once per animation frame. */
   poll() {
     if (!this.analyser) return;

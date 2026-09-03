@@ -1,6 +1,7 @@
 'use strict';
 
 import { presets, LAYOUTS } from '../visuals/registry.js';
+import { SCREEN } from './screens.js';
 
 /** How long floating chrome stays up after the pointer stops moving. */
 const CHROME_VISIBLE_SECONDS = 2.5;
@@ -23,9 +24,17 @@ export class Controls {
    * @param {(id: string) => void} handlers.onSelectLayout
    * @param {(cell: number) => void} handlers.onSelectCell
    * @param {(enabled: boolean) => void} handlers.onToggleAuto
+   * @param {() => void} handlers.onGoHome
+   * @param {() => void} handlers.onStartVisualizing
+   * @param {() => void} handlers.onOpenSettings
+   * @param {() => void} handlers.onBack
+   * @param {() => void} handlers.onSkipSplash
+   * @param {() => void} handlers.onEscape
    */
   constructor(handlers) {
     this.handlers = handlers;
+    /** Which screen is in front; keyboard shortcuts are scoped to it. */
+    this.screen = SCREEN.SPLASH;
     this.dom = {
       error: document.getElementById('error'),
       errorMessage: document.getElementById('error-message'),
@@ -105,6 +114,14 @@ export class Controls {
     click('btn-overlay-exit', () => this.handlers.onToggleOverlay());
     click('btn-overlay-close', () => window.appBridge.close());
 
+    click('btn-home', () => this.handlers.onGoHome());
+    click('btn-settings', () => this.handlers.onOpenSettings());
+    click('btn-home-start', () => this.handlers.onStartVisualizing());
+    click('btn-home-settings', () => this.handlers.onOpenSettings());
+    click('btn-home-quit', () => window.appBridge.close());
+    click('btn-settings-back', () => this.handlers.onBack());
+    click('splash', () => this.handlers.onSkipSplash());
+
     this.dom.select.addEventListener('change', (event) =>
       this.handlers.onSelectPreset(Number(event.target.value))
     );
@@ -134,20 +151,43 @@ export class Controls {
 
   _bindKeyboard() {
     window.addEventListener('keydown', (event) => {
+      // The splash is a greeting, not a gate: anything at all dismisses it.
+      if (this.screen === SCREEN.SPLASH) {
+        this.handlers.onSkipSplash();
+        return;
+      }
+
+      // Available on every screen.
+      switch (event.key) {
+        case 'Escape':
+          this.handlers.onEscape();
+          return;
+        case 'F11':
+          event.preventDefault();
+          this.handlers.onToggleFullscreen();
+          return;
+        case 'o':
+        case 'O':
+          if (event.ctrlKey) {
+            this.handlers.onToggleOverlay();
+            return;
+          }
+          break;
+        default:
+          break;
+      }
+
+      // Everything below edits what is on the canvas. On home or settings the
+      // canvas is only a backdrop, so the same keys would silently rearrange
+      // things the user is not looking at.
+      if (this.screen !== SCREEN.VISUALIZE) return;
+
       switch (event.key) {
         case 'ArrowRight':
           this.handlers.onStepPreset(1);
           break;
         case 'ArrowLeft':
           this.handlers.onStepPreset(-1);
-          break;
-        case 'F11':
-          event.preventDefault();
-          this.handlers.onToggleFullscreen();
-          break;
-        case 'o':
-        case 'O':
-          if (event.ctrlKey) this.handlers.onToggleOverlay();
           break;
         case 'g':
         case 'G': {
@@ -164,6 +204,11 @@ export class Controls {
           }
       }
     });
+  }
+
+  /** @param {string} screen One of SCREEN; scopes the keyboard shortcuts. */
+  setScreen(screen) {
+    this.screen = screen;
   }
 
   /** Reflects the active preset in both the dropdown and the overlay label. */

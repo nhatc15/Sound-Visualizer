@@ -12,4 +12,6 @@ contextBridge.exposeInMainWorld('appBridge', {
   setClickThrough: (enabled) => ipcRenderer.invoke('window:set-click-through', enabled),
   getState: () => ipcRenderer.invoke('window:get-state'),
   rememberView: (view) => ipcRenderer.invoke('window:remember-view', view),
+  getSettings: () => ipcRenderer.invoke('settings:get'),
+  saveSettings: (settings) => ipcRenderer.invoke('settings:set', settings),
 });

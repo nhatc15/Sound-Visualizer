@@ -1,6 +1,13 @@
 'use strict';
 
-import { PALETTES, gradient, samplePalette, withGlow, smoothPath } from './draw-utils.js';
+import {
+  PALETTES,
+  gradient,
+  samplePalette,
+  withGlow,
+  smoothPath,
+  resample,
+} from './draw-utils.js';
 
 /** White-to-ember ramp used by the ribbon preset only. */
 const RIBBON = [[0, '#ffffff'], [0.35, '#ffd21e'], [0.7, '#ff5a18'], [1, '#ff2bd1']];
@@ -48,6 +55,7 @@ const multiLine = {
   draw(ctx, f) {
     const mid = f.height / 2;
     const spread = f.height * 0.5;
+    const gap = spread / (this.lineCount - 1);
     const samples = f.waveform.length;
 
     ctx.lineWidth = Math.max(1.4, f.height * 0.004);
@@ -58,10 +66,11 @@ const multiLine = {
       // Lines share one waveform but read it at a shifted offset, which reads
       // as the same wave travelling through the stack.
       const offset = Math.round(line * samples * 0.06);
-      // Amplitude stays under the gap between lines; when it exceeded the gap
-      // the stack collapsed into one tangled band instead of the reference's
-      // separated ribbons.
-      const amplitude = f.height * (0.045 + 0.025 * Math.sin(t * Math.PI));
+      // Derived from the real baseline spacing rather than a hand-tuned
+      // fraction of the height: peak deviation has to stay under half the gap,
+      // or neighbouring lines cross and the stack collapses into one tangled
+      // band instead of the reference's separated ribbons.
+      const amplitude = gap * (0.28 + 0.16 * Math.sin(t * Math.PI));
       const baseY = mid - spread / 2 + t * spread;
       const points = [];
 
@@ -137,6 +146,9 @@ const spikyWave = {
   draw(ctx, f) {
     const mid = f.height / 2;
     const spikes = 70;
+    // resample keeps the loudest bin per spike; indexing f.bands directly
+    // stepped over roughly a third of the bands and dropped narrow tones.
+    const energies = resample(f.bands, spikes);
     const maxUp = f.height * 0.36;
     const maxDown = f.height * 0.22;
     const step = f.width / spikes;
@@ -151,11 +163,14 @@ const spikyWave = {
 
       for (let i = 0; i < spikes; i += 1) {
         const value = f.waveform[Math.floor((i / spikes) * f.waveform.length)];
-        const energy = f.bands[Math.floor((i / spikes) * f.bands.length)];
+        const energy = energies[i];
         const x = i * step;
 
         // Up spike then a shorter down spike, giving the asymmetric comb look.
-        ctx.lineTo(x + step * 0.3, mid - Math.abs(value) * maxUp * (0.5 + energy));
+        // Clamped because |value| and energy both reach 1, and the unclamped
+        // product hit 1.5x maxUp, which ran off the top of the cell.
+        const up = Math.min(maxUp, Math.abs(value) * maxUp * (0.5 + energy));
+        ctx.lineTo(x + step * 0.3, mid - up);
         ctx.lineTo(x + step * 0.5, mid);
         ctx.lineTo(x + step * 0.7, mid + energy * maxDown);
         ctx.lineTo(x + step, mid);

@@ -4,9 +4,12 @@ const { app, ipcMain, session, globalShortcut } = require('electron');
 
 const { enableSystemAudioLoopback } = require('./loopback-audio');
 const { WindowManager } = require('./window-manager');
+const { SettingsStore } = require('./settings-store');
 
 const isDev = process.argv.includes('--dev');
 const windows = new WindowManager({ isDev });
+/** Built once the app is ready, because it resolves the userData path. */
+let settings = null;
 
 // A single instance keeps one loopback capture alive; a second launch just
 // focuses the window that already exists.
@@ -21,6 +24,7 @@ if (!app.requestSingleInstanceLock()) {
   });
 
   app.whenReady().then(() => {
+    settings = new SettingsStore();
     enableSystemAudioLoopback(session.defaultSession);
     windows.create();
     registerIpc();
@@ -61,6 +65,11 @@ function registerIpc() {
   ipcMain.handle('window:remember-view', (_event, view) => {
     windows.pendingView = view;
   });
+
+  // The renderer owns the settings schema and validates on load, so these two
+  // just move an opaque blob to and from disk.
+  ipcMain.handle('settings:get', () => settings.read());
+  ipcMain.handle('settings:set', (_event, value) => settings.write(value));
 }
 
 function registerShortcuts() {

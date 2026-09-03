@@ -129,6 +129,16 @@ export function smoothPath(ctx, points, startNewSubpath = true) {
 }
 
 /**
+ * Deterministic pseudo-random in [0,1) from an index and a seed. Fixed per
+ * index on purpose: re-rolling every frame makes speck fields boil, whereas a
+ * constant value just makes neighbours unequal.
+ */
+export function hashNoise(index, seed) {
+  const value = Math.sin(index * 12.9898 + seed * 78.233) * 43758.5453;
+  return value - Math.floor(value);
+}
+
+/**
  * Reads `count` evenly spaced values out of a band array, so a preset that
  * wants 32 bars and one that wants 96 can share the same analyser output.
  */

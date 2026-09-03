@@ -18,10 +18,16 @@ class WindowManager {
     this.window = null;
     /**
      * The view the renderer last reported, restored after a mode switch
-     * rebuilds the window: preset per grid cell, which cell is selected, and
-     * the grid shape.
+     * rebuilds the window: preset per grid cell, which cell is selected, the
+     * grid shape, and which screen was in front so a mode switch does not drop
+     * the user back at the splash.
      */
-    this.pendingView = { cellPresets: null, selectedCell: 0, layout: 'single' };
+    this.pendingView = {
+      cellPresets: null,
+      selectedCell: 0,
+      layout: 'single',
+      screen: null,
+    };
     /** Set when the next window should open straight into fullscreen. */
     this.pendingFullscreen = false;
   }

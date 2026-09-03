@@ -7,6 +7,7 @@ import {
   roundedRect,
   smoothPath,
   resample,
+  hashNoise,
 } from './draw-utils.js';
 
 /**
@@ -111,124 +112,224 @@ const smoothHills = {
 };
 
 /**
- * Deterministic pseudo-random in [0,1) for a slot. Fixed per slot on purpose:
- * re-rolling each frame would make the whole mark shimmer, whereas a constant
- * value just makes neighbours unequal the way the hand-drawn emblem is.
+ * Eases between successive fixed noise fields, so a slot's character changes
+ * over seconds instead of per frame. Frozen noise made the mark look like a
+ * static logo; per-frame noise made it boil. This drifts.
  */
-function slotNoise(index, seed) {
-  const value = Math.sin(index * 12.9898 + seed * 78.233) * 43758.5453;
-  return value - Math.floor(value);
+function driftNoise(index, seed, time, rate = 0.15) {
+  const phase = time * rate + seed * 3.7;
+  const step = Math.floor(phase);
+  const mix = phase - step;
+  const eased = mix * mix * (3 - 2 * mix);
+  return (
+    hashNoise(index, step + seed * 11) * (1 - eased) +
+    hashNoise(index, step + 1 + seed * 11) * eased
+  );
 }
 
 /**
- * Row of four-pointed stars mirrored about the axis, one per frequency band,
- * so each one springs up and down in place rather than drifting sideways.
+ * The Tacet Mark: a vertical spindle of light that blooms out of the centre
+ * and tapers to a point at both ends, ringed by orbiting circles and drifting
+ * motes.
  *
- * Ink on paper rather than neon: the shape is a flat silhouette, and glow or a
- * gradient would blunt the points that give it its character.
+ * Deliberately unlike the other presets. The silhouette is built from jagged
+ * straight segments rather than smoothed curves, and the two sides come from
+ * independent noise so it is never a mirror of itself — smoothed and
+ * symmetric, this shape reads as a leaf rather than an emblem.
  */
 const spindleWave = {
   id: 'spindle-wave',
   name: 'Tacet Mark',
-  background: '#f2f0ec',
-  slots: 34,
+  slots: 170,
   draw(ctx, f) {
-    const mid = f.height / 2;
+    const cx = f.width / 2;
+    const cy = f.height / 2;
+    // Every dimension keys off the short edge, so the mark keeps its shape in
+    // a wide single view and in a cramped grid cell alike.
+    const unit = Math.min(f.width, f.height);
+    const span = f.height * 0.96;
+    const top = cy - span / 2;
+    const levels = resample(f.bands, this.slots);
+
+    this._ground(ctx, f, cx, cy, unit);
+    this._rings(ctx, f, cx, cy, unit);
+    this._motes(ctx, f, cx, cy, unit);
+    this._mark(ctx, f, cx, cy, unit, top, span, levels);
+  },
+
+  /** Dark teal well behind the mark; the cyan glow needs somewhere to sit. */
+  _ground(ctx, f, cx, cy, unit) {
+    const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, unit * 0.8);
+    g.addColorStop(0, 'rgba(20, 52, 60, 0.96)');
+    g.addColorStop(0.55, 'rgba(10, 28, 36, 0.96)');
+    g.addColorStop(1, 'rgba(4, 10, 16, 0.96)');
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, f.width, f.height);
+  },
+
+  _rings(ctx, f, cx, cy, unit) {
+    // Rings breathe with the bass rather than the overall level, so they pulse
+    // on the beat instead of tracking every cymbal.
+    const pulse = 1 + f.bass * 0.07;
+    const outer = unit * 0.4 * pulse;
+    const inner = unit * 0.325 * pulse;
+    const glow = Math.min(26, unit * 0.06);
+
+    ctx.save();
+    ctx.strokeStyle = 'rgba(126, 240, 255, 0.85)';
+    ctx.lineWidth = Math.max(1.5, unit * 0.009);
+    ctx.shadowColor = '#5fe6ff';
+    ctx.shadowBlur = glow;
+    ctx.beginPath();
+    ctx.arc(cx, cy, outer, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.restore();
+
+    ctx.save();
+    ctx.strokeStyle = 'rgba(216, 150, 76, 0.8)';
+    ctx.lineWidth = Math.max(1, unit * 0.0035);
+    ctx.beginPath();
+    ctx.arc(cx, cy, inner, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.restore();
+
+    // Broken outer arc, turning slowly — a solid third ring made the emblem
+    // look like a static badge.
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.rotate(f.time * 0.11);
+    ctx.strokeStyle = 'rgba(158, 214, 228, 0.34)';
+    ctx.lineWidth = Math.max(1, unit * 0.005);
+    ctx.setLineDash([unit * 0.028, unit * 0.052]);
+    ctx.beginPath();
+    ctx.arc(0, 0, unit * 0.465, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.restore();
+
+    this._orb(ctx, cx, cy, outer, f.time * 0.31 + 0.6, unit * 0.026, '#dff6ff', false, glow);
+    this._orb(ctx, cx, cy, inner, -f.time * 0.23 + 3.4, unit * 0.019, '#f4d78c', true, glow);
+  },
+
+  /** A circle riding a ring: hollow on the bright ring, filled on the thin one. */
+  _orb(ctx, cx, cy, radius, angle, size, colour, filled, glow) {
+    const x = cx + Math.cos(angle) * radius;
+    const y = cy + Math.sin(angle) * radius;
+    ctx.save();
+    ctx.shadowColor = colour;
+    ctx.shadowBlur = glow;
+    ctx.beginPath();
+    ctx.arc(x, y, size, 0, Math.PI * 2);
+    if (filled) {
+      ctx.fillStyle = colour;
+      ctx.fill();
+    } else {
+      ctx.strokeStyle = colour;
+      ctx.lineWidth = Math.max(1, size * 0.22);
+      ctx.stroke();
+    }
+    ctx.restore();
+  },
+
+  /** Specks drifting on slow circular paths, brightened by the treble. */
+  _motes(ctx, f, cx, cy, unit) {
+    const count = 44;
+    const lift = 0.5 + f.treble * 0.9;
+    ctx.save();
+    for (let i = 0; i < count; i += 1) {
+      const angle =
+        hashNoise(i, 5) * Math.PI * 2 + f.time * (0.04 + hashNoise(i, 6) * 0.09);
+      const radius = unit * (0.16 + hashNoise(i, 7) * 0.36);
+      const x = cx + Math.cos(angle) * radius * 1.4;
+      const y = cy + Math.sin(angle) * radius;
+      const size = Math.max(0.6, unit * 0.0045 * (0.35 + hashNoise(i, 8)));
+      const alpha = (0.12 + 0.42 * hashNoise(i, 9)) * lift;
+      ctx.fillStyle = 'rgba(206, 242, 252, ' + alpha.toFixed(3) + ')';
+      ctx.beginPath();
+      ctx.arc(x, y, size, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.restore();
+  },
+
+  /**
+   * Per-slot reach multiplier with a heavy tail. Most slots hug the body
+   * outline while a rare few shoot far past it: an even multiplier produced a
+   * smooth blade, and it is the long needle beside short neighbours that makes
+   * the mark read as struck rather than generated.
+   */
+  _reachFactor(index, seed, time) {
+    const body = driftNoise(index, seed, time);
+    const needle = driftNoise(index, seed + 40, time) ** 8;
+    return 0.22 + 0.85 * body * body + 2.7 * needle;
+  },
+
+  _mark(ctx, f, cx, cy, unit, top, span, levels) {
     const slots = this.slots;
-    const levels = resample(f.bands, slots);
-    const slotWidth = f.width / slots;
-    const maxHalf = f.height * 0.46;
+    // Sized against the rings, not the cell: the mark is a slim spindle that
+    // sits inside them, with only the rare needle crossing. Scaled to the cell
+    // it swelled into a filled ellipse and the rings disappeared behind it.
+    const maxReach = Math.min(f.width * 0.44, unit * 0.38);
+    const limit = Math.min(f.width * 0.47, unit * 0.44);
 
-    // The emblem always has one spike towering over the rest; picking the
-    // loudest band keeps that focal point moving with the music.
-    let peakSlot = 0;
-    for (let c = 1; c < slots; c += 1) {
-      if (levels[c] > levels[peakSlot]) peakSlot = c;
+    const ys = new Array(slots);
+    const right = new Array(slots);
+    const left = new Array(slots);
+
+    for (let i = 0; i < slots; i += 1) {
+      const t = slots === 1 ? 0.5 : i / (slots - 1);
+      ys[i] = top + t * span;
+      // Lens envelope: this is what makes the spikes bloom out of the middle
+      // and shrink to nothing at the tips.
+      const envelope = Math.sin(Math.PI * t) ** 1.15;
+      const body = envelope * (0.08 + 0.92 * levels[i]) * maxReach;
+      right[i] = Math.min(limit, body * this._reachFactor(i, 1, f.time));
+      left[i] = Math.min(limit, body * this._reachFactor(i, 2, f.time));
     }
 
-    // Loudest band within a few slots either side. Placement is judged against
-    // this rather than the global peak: measured globally, a strong bass note
-    // gated out the whole treble half and the mark lost its right-hand tail.
-    const NEIGHBOURHOOD = 4;
-    const localMax = new Array(slots);
-    for (let c = 0; c < slots; c += 1) {
-      let loudest = 0;
-      const from = Math.max(0, c - NEIGHBOURHOOD);
-      const to = Math.min(slots - 1, c + NEIGHBOURHOOD);
-      for (let k = from; k <= to; k += 1) {
-        if (levels[k] > loudest) loudest = levels[k];
-      }
-      localMax[c] = loudest;
-    }
-
-    const centreWeight = (c) => {
-      const t = slots === 1 ? 0.5 : c / (slots - 1);
-      return Math.sin(Math.PI * t);
-    };
-
-    ctx.fillStyle = '#111014';
-
-    // --- Horizontal spine -------------------------------------------------
-    // A continuous ribbon, thick at the centre and tapering to hairline points.
-    // Without it the stars read as loose diamonds rather than one sound-wave
-    // mark, which is what ties the reference together.
-    const upper = [];
-    const lower = [];
-    for (let c = 0; c < slots; c += 1) {
-      const thickness =
-        f.height * 0.018 * centreWeight(c) ** 1.7 * (0.18 + 0.82 * levels[c]);
-      const x = c * slotWidth + slotWidth / 2;
-      upper.push({ x, y: mid - thickness });
-      lower.push({ x, y: mid + thickness });
-    }
-
+    ctx.save();
     ctx.beginPath();
-    ctx.moveTo(0, mid);
-    smoothPath(ctx, upper, false);
-    ctx.lineTo(f.width, mid);
-    smoothPath(ctx, lower.reverse(), false);
+    ctx.moveTo(cx, top);
+    for (let i = 0; i < slots; i += 1) ctx.lineTo(cx + right[i], ys[i]);
+    ctx.lineTo(cx, top + span);
+    for (let i = slots - 1; i >= 0; i -= 1) ctx.lineTo(cx - left[i], ys[i]);
     ctx.closePath();
-    ctx.fill();
 
-    // --- Stars ------------------------------------------------------------
+    const body = ctx.createLinearGradient(0, top, 0, top + span);
+    body.addColorStop(0, 'rgba(255, 224, 148, 0.95)');
+    body.addColorStop(0.33, 'rgba(224, 255, 246, 0.98)');
+    body.addColorStop(0.5, '#ffffff');
+    body.addColorStop(0.67, 'rgba(206, 250, 255, 0.98)');
+    body.addColorStop(1, 'rgba(255, 212, 130, 0.95)');
+    ctx.fillStyle = body;
+    ctx.shadowColor = 'rgba(150, 245, 255, 0.9)';
+    ctx.shadowBlur = Math.min(30, unit * 0.085);
+    ctx.fill();
+    ctx.restore();
+
+    // Blown-out core along the axis, fading to nothing at both tips.
+    ctx.save();
+    const core = ctx.createLinearGradient(0, top, 0, top + span);
+    const heat = (0.5 + 0.5 * f.levelSmooth).toFixed(3);
+    core.addColorStop(0, 'rgba(255, 255, 255, 0)');
+    core.addColorStop(0.5, 'rgba(255, 255, 255, ' + heat + ')');
+    core.addColorStop(1, 'rgba(255, 255, 255, 0)');
+    ctx.strokeStyle = core;
+    ctx.lineWidth = Math.max(1.5, unit * 0.011 * (0.6 + f.levelSmooth));
+    ctx.shadowColor = '#ffffff';
+    ctx.shadowBlur = Math.min(26, unit * 0.07);
     ctx.beginPath();
-    for (let c = 0; c < slots; c += 1) {
-      // Placement: a slot must stand out within its own neighbourhood, with a
-      // fixed per-slot bar so the survivors are scattered rather than evenly
-      // spaced. This is what leaves real gaps of bare spine.
-      if (levels[c] < localMax[c] * (0.5 + 0.42 * slotNoise(c, 1))) continue;
+    ctx.moveTo(cx, top);
+    ctx.lineTo(cx, top + span);
+    ctx.stroke();
+    ctx.restore();
 
-      // Size: measured against the loudest band overall, so the whole mark
-      // still swells and shrinks with the music instead of self-levelling.
-      const strength = levels[c] / Math.max(0.001, levels[peakSlot]);
-      const bell = 0.24 + 0.76 * centreWeight(c) ** 1.1;
-      let half = strength ** 1.25 * bell * (0.55 + 0.45 * slotNoise(c, 2)) * maxHalf;
-      if (c === peakSlot) half *= 1.32;
-      if (half < f.height * 0.018) continue;
-
-      // Slight lean, because perfectly mirrored spikes look mechanical.
-      const lean = (slotNoise(c, 3) - 0.5) * 0.34;
-      // Clamped so the tallest spike cannot run off the top of the cell, which
-      // it did once the peak boost and the lean stacked up.
-      const limit = f.height * 0.47;
-      const up = Math.min(limit, half * (1 + lean));
-      const down = Math.min(limit, half * (1 - lean));
-
-      // Width follows height, capped by the slot. At a fixed width the short
-      // stars stayed as wide as the tall ones and the row fused into a band.
-      const halfWidth = Math.min(slotWidth * 0.5, half * 0.3);
-      // Control points sit near the axis, pulling the sides concave so each
-      // shape tapers to a point instead of bulging like an ellipse.
-      const pull = halfWidth * 0.18;
-      const cx = c * slotWidth + slotWidth / 2;
-
-      ctx.moveTo(cx, mid - up);
-      ctx.quadraticCurveTo(cx + pull, mid - up * 0.34, cx + halfWidth, mid);
-      ctx.quadraticCurveTo(cx + pull, mid + down * 0.34, cx, mid + down);
-      ctx.quadraticCurveTo(cx - pull, mid + down * 0.34, cx - halfWidth, mid);
-      ctx.quadraticCurveTo(cx - pull, mid - up * 0.34, cx, mid - up);
-    }
-    ctx.fill();
+    // Hot centre, so the widest part of the spindle is also the brightest.
+    const bloom = ctx.createRadialGradient(cx, cy, 0, cx, cy, unit * 0.24);
+    const peak = (0.22 + 0.4 * f.levelSmooth).toFixed(3);
+    bloom.addColorStop(0, 'rgba(255, 255, 255, ' + peak + ')');
+    bloom.addColorStop(1, 'rgba(255, 255, 255, 0)');
+    ctx.fillStyle = bloom;
+    ctx.fillRect(cx - unit * 0.24, cy - unit * 0.24, unit * 0.48, unit * 0.48);
   },
 };
 

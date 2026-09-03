@@ -93,12 +93,15 @@ const sliderEq = {
     const bottom = f.height * 0.88;
     const travel = bottom - top;
     const knobRadius = Math.max(4, trackWidth * 0.95);
+    // Every track shares one vertical ramp, so build it once per frame rather
+    // than rebuilding an identical gradient object per column.
+    const trackFill = gradient(ctx, PALETTES.spectrum, [0, top, 0, bottom]);
 
     for (let c = 0; c < this.columns; c += 1) {
       const x = c * slot + slot / 2 - trackWidth / 2;
       const knobY = bottom - values[c] * travel;
 
-      ctx.fillStyle = gradient(ctx, PALETTES.spectrum, [0, top, 0, bottom]);
+      ctx.fillStyle = trackFill;
       roundedRect(ctx, x, top, trackWidth, travel, trackWidth / 2);
       ctx.fill();
 
