@@ -71,6 +71,12 @@ function registerShortcuts() {
     if (win.isVisible()) win.hide();
     else win.show();
   });
+
+  // An always-on-top overlay rarely holds keyboard focus, so the in-page
+  // Ctrl+O never reaches it. This is the escape hatch that always works.
+  globalShortcut.register('Alt+Shift+O', () => {
+    if (windows.window) windows.toggleMode();
+  });
 }
 
 app.on('will-quit', () => globalShortcut.unregisterAll());

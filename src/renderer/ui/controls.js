@@ -2,6 +2,11 @@
 
 import { presets, LAYOUTS } from '../visuals/registry.js';
 
+/** How long floating chrome stays up after the pointer stops moving. */
+const CHROME_VISIBLE_SECONDS = 2.5;
+/** Longer on entering overlay mode: this is the user's only cue it exists. */
+const CHROME_INTRO_SECONDS = 5;
+
 /**
  * Wires every button, the preset dropdown and the keyboard shortcuts to a set
  * of callbacks supplied by the app. Holds no state of its own beyond DOM
@@ -29,15 +34,36 @@ export class Controls {
       overlayName: document.getElementById('overlay-preset-name'),
       autoCheckbox: document.getElementById('chk-auto'),
       overlayButton: document.getElementById('btn-overlay'),
+      fullscreenButton: document.getElementById('btn-fullscreen'),
       layoutSelect: document.getElementById('layout-select'),
       cellSelect: document.getElementById('cell-select'),
       canvas: document.getElementById('visualizer'),
     };
 
+    this.chromeTimer = null;
+
     this._populatePresetOptions();
     this._populateLayoutOptions();
     this._bindButtons();
     this._bindKeyboard();
+    this._bindChromeReveal();
+  }
+
+  /**
+   * Fullscreen and overlay both hide their chrome to stay out of the way; any
+   * pointer movement brings it back for a few seconds.
+   */
+  _bindChromeReveal() {
+    window.addEventListener('mousemove', () => this.revealChrome());
+  }
+
+  revealChrome(seconds = CHROME_VISIBLE_SECONDS) {
+    document.body.classList.add('chrome-visible');
+    clearTimeout(this.chromeTimer);
+    this.chromeTimer = setTimeout(
+      () => document.body.classList.remove('chrome-visible'),
+      seconds * 1000
+    );
   }
 
   _populatePresetOptions() {
@@ -176,14 +202,25 @@ export class Controls {
     this.dom.autoCheckbox.checked = enabled;
   }
 
-  /** Fullscreen hides the title bar; the preset controls stay reachable. */
+  /**
+   * Fullscreen hides the title bar and floats the control bar. The button
+   * names the action it will perform, not the state it is in.
+   */
   setFullscreenActive(active) {
     document.body.classList.toggle('fullscreen', active);
+    this.dom.fullscreenButton.textContent = active ? 'Thoát toàn màn hình' : 'Toàn màn hình';
+    this.dom.fullscreenButton.title = active
+      ? 'Thoát toàn màn hình (F11)'
+      : 'Toàn màn hình (F11)';
+    if (active) this.revealChrome(CHROME_INTRO_SECONDS);
   }
 
   setOverlayActive(active) {
     document.body.classList.toggle('overlay', active);
     this.dom.overlayButton.classList.toggle('active', active);
+    // Entering overlay, show the strip unprompted: it is otherwise invisible
+    // until hovered, and a user who does not know it is there is stranded.
+    if (active) this.revealChrome(CHROME_INTRO_SECONDS);
   }
 
   showRunning() {

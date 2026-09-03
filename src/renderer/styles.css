@@ -249,6 +249,34 @@ body.fullscreen #titlebar {
   display: none;
 }
 
+/*
+ * Fullscreen is for watching, so the control bar floats over the visuals and
+ * gets out of the way. It comes back on any mouse move, and stays while the
+ * pointer is on it or a dropdown inside it has focus — hiding the bar out from
+ * under someone reaching for it is worse than showing it a moment too long.
+ */
+body.fullscreen #controls {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 5;
+  background: rgba(23, 8, 38, 0.82);
+  border-top: 1px solid rgba(201, 59, 255, 0.18);
+  opacity: 0;
+  transform: translateY(100%);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  pointer-events: none;
+}
+
+body.fullscreen.chrome-visible #controls,
+body.fullscreen #controls:hover,
+body.fullscreen #controls:focus-within {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
 /* ---------- Overlay mode ---------- */
 
 #overlay-bar {
@@ -276,34 +304,53 @@ body.overlay #overlay-bar {
   display: flex;
   align-items: center;
   gap: 4px;
-  padding: 4px 6px;
-  border-radius: 18px;
-  background: rgba(23, 8, 38, 0.55);
+  padding: 5px 8px;
+  border-radius: 20px;
+  /* Nearly opaque with a lit rim: the overlay floats over whatever is on the
+   * desktop, and at 55% alpha the strip washed out to unreadable grey against
+   * a light background. */
+  background: rgba(23, 8, 38, 0.94);
+  border: 1px solid rgba(201, 59, 255, 0.45);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.45);
   opacity: 0;
   transition: opacity 0.18s ease;
   -webkit-app-region: no-drag;
 }
 
-body.overlay:hover #overlay-bar {
+/* Shown on hover, and briefly on its own when overlay mode opens — otherwise
+ * nothing on screen suggests the controls exist at all. */
+body.overlay:hover #overlay-bar,
+body.overlay.chrome-visible #overlay-bar {
   opacity: 1;
 }
 
 #overlay-bar #overlay-preset-name {
   padding: 0 8px;
-  color: var(--text-dim);
-  font-size: 11px;
+  color: var(--text);
+  font-size: 12px;
   white-space: nowrap;
 }
 
 #overlay-bar button {
-  width: 24px;
-  height: 24px;
+  width: 28px;
+  height: 28px;
   border: 0;
   border-radius: 50%;
   background: transparent;
-  color: var(--text-dim);
-  font-size: 10px;
+  color: var(--text);
+  font-size: 13px;
+  line-height: 1;
   cursor: pointer;
+}
+
+/* The way back to a normal window needs a word, not a glyph — no icon reads
+ * as "leave overlay". */
+#overlay-bar button.labelled {
+  width: auto;
+  padding: 0 12px;
+  border-radius: 14px;
+  background: rgba(201, 59, 255, 0.22);
+  font-size: 12px;
 }
 
 #overlay-bar button:hover {

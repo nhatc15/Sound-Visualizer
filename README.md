@@ -36,13 +36,18 @@ Icon nằm ở `build/icon.ico` (7 kích thước 16–256px). Muốn đổi th�
 | Nhảy tới hiệu ứng 1–9 | phím số `1`–`9` |
 | Toàn màn hình (cả khi đang ở overlay) | `F11` |
 | Bật/tắt overlay nổi | `Ctrl+O` hoặc nút **Overlay** |
+| Thoát overlay **từ bất kỳ đâu** (toàn cục) | `Alt+Shift+O` |
 | Ẩn/hiện app (toàn cục) | `Alt+Shift+V` |
 | Tự đổi hiệu ứng mỗi 20s | checkbox **Tự đổi** |
 | Đổi số hiệu ứng hiện cùng lúc | `G` hoặc dropdown bên phải nút ▶ |
 
-**Chế độ overlay**: không viền, nền trong suốt, luôn nổi trên cùng. Kéo bất kỳ đâu để di chuyển; **rê chuột vào để hiện thanh nút ở góc trên bên phải** (đổi hiệu ứng, toàn màn hình, về cửa sổ thường, đóng).
+**Chế độ overlay**: không viền, nền trong suốt, luôn nổi trên cùng. Kéo bất kỳ đâu để di chuyển.
 
-Từ overlay muốn về **toàn màn hình**: bấm `F11` hoặc nút ⛶ trên thanh đó — đi thẳng một bước, không phải qua cửa sổ thường. Ở toàn màn hình, thanh tiêu đề tự ẩn, thanh chọn hiệu ứng ở dưới vẫn còn. `F11` lần nữa để thoát.
+Thanh nút nằm ở **góc trên bên phải**: đổi hiệu ứng, toàn màn hình, nút **Cửa sổ** (về cửa sổ thường) và đóng. Thanh này **tự hiện 5 giây khi mới vào overlay** rồi mờ đi — rê chuột vào overlay là hiện lại.
+
+Nếu lỡ mất dấu thanh đó: `Alt+Shift+O` thoát overlay từ bất kỳ đâu, kể cả khi bạn đang làm việc ở app khác. Phím này là toàn cục nên không cần overlay đang được focus — `Ctrl+O` chỉ chạy khi cửa sổ overlay đang nhận bàn phím, mà một widget luôn-nổi-trên-cùng thì thường không.
+
+**Toàn màn hình**: `F11`, hoặc nút ⛶ trên thanh overlay để đi thẳng một bước không qua cửa sổ thường. Thanh tiêu đề ẩn hẳn, còn **thanh điều khiển dưới đáy trôi lên trên hình và tự ẩn sau 2,5 giây** — động chuột là nó hiện lại, và nó ở nguyên đó khi con trỏ đang trên thanh. Nút toàn màn hình đổi chữ theo trạng thái: *Toàn màn hình* ↔ *Thoát toàn màn hình*.
 
 ## Xem nhiều hiệu ứng cùng lúc
 
