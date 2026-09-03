@@ -6,8 +6,9 @@
   "scripts": {
     "start": "electron .",
     "dev": "electron . --dev",
-    "build": "electron-builder --win",
-    "build:portable": "electron-builder --win portable"
+    "build": "electron-builder --win -p never",
+    "build:portable": "electron-builder --win portable -p never",
+    "release": "electron-builder --win --publish always"
   },
   "author": "vannh",
   "license": "MIT",
@@ -45,7 +46,7 @@
       "icon": "build/icon.ico"
     },
     "portable": {
-      "artifactName": "${productName} ${version} Portable.${ext}"
+      "artifactName": "Sound-Visualizer-Portable.${ext}"
     },
     "nsis": {
       "oneClick": false,
@@ -59,7 +60,15 @@
       "installerIcon": "build/icon.ico",
       "uninstallerIcon": "build/icon.ico",
       "uninstallDisplayName": "Sound Visualizer ${version}",
-      "artifactName": "${productName} ${version} Setup.${ext}"
-    }
+      "artifactName": "Sound-Visualizer-Setup.${ext}"
+    },
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "nhatc15",
+        "repo": "Sound-Visualizer",
+        "releaseType": "release"
+      }
+    ]
   }
 }

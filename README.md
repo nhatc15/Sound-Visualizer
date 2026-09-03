@@ -2,7 +2,20 @@
 
 Ứng dụng Windows trực quan hoá **âm thanh máy đang phát** (Spotify, YouTube, game, bất kỳ nguồn nào) với 24 hiệu ứng: 16 hiệu ứng neon phổ và 8 hiệu ứng dựng theo chủ đề nhạc.
 
-## Chạy
+## Tải về
+
+| Bản | Link | Dành cho |
+|---|---|---|
+| **Setup** | [Sound-Visualizer-Setup.exe](https://github.com/nhatc15/Sound-Visualizer/releases/latest/download/Sound-Visualizer-Setup.exe) | Người dùng thường. Cài đặt bình thường, tự tạo shortcut Desktop + Start Menu, gỡ được qua Settings → Apps. |
+| **Portable** | [Sound-Visualizer-Portable.exe](https://github.com/nhatc15/Sound-Visualizer/releases/latest/download/Sound-Visualizer-Portable.exe) | Chạy thẳng, không cài. Tiện để cắm USB hoặc thử nhanh. |
+
+Mỗi bản ~107 MB. Hai link trên luôn trỏ tới **bản phát hành mới nhất**, không cần sửa README khi lên version — đổi lại là tên file không chứa số version. Muốn biết đang dùng bản nào thì xem [trang releases](https://github.com/nhatc15/Sound-Visualizer/releases), hoặc mục gỡ cài đặt trong Windows — nó hiện kèm số version.
+
+Cài theo từng user (`%LOCALAPPDATA%`), **không cần quyền admin**.
+
+**Lần đầu mở, Windows sẽ hiện cảnh báo SmartScreen** ("Windows protected your PC") vì file chưa được ký số. Bấm *More info → Run anyway*. Muốn hết cảnh báo phải mua code-signing certificate (~vài triệu/năm) — không bắt buộc để app chạy.
+
+## Chạy từ source
 
 ```bash
 npm install
@@ -11,20 +24,24 @@ npm start
 
 App tự bắt âm thanh ngay khi mở — không cần bấm gì, không có hộp thoại xin quyền.
 
-## Gửi cho người khác dùng
+## Phát hành bản mới
 
 ```bash
-npm run build            # tạo cả 2 file dưới đây trong dist/
+npm version patch        # hoặc minor / major — sửa package.json và tạo tag
+git push --follow-tags   # đẩy tag lên là xong
 ```
 
-| File | Dành cho |
-|---|---|
-| `Sound Visualizer 1.0.0 Setup.exe` | Người dùng thường. Cài đặt bình thường, tự tạo shortcut Desktop + Start Menu, gỡ được qua Settings → Apps. |
-| `Sound Visualizer 1.0.0 Portable.exe` | Chạy thẳng, không cài. Tiện để cắm USB hoặc thử nhanh. |
+Đẩy tag `v*` sẽ chạy `.github/workflows/release.yml`: máy Windows của GitHub tự `npm ci`, build cả hai target, rồi đính kèm 2 file exe vào release của tag đó. Không phải upload 220 MB từ máy mình, và không có file binary nào đi vào history repo.
 
-Cài theo từng user (`%LOCALAPPDATA%`), **không cần quyền admin**.
+Vì sao không commit thẳng exe vào git: GitHub chặn file **>100 MB**, mỗi bản ở đây đã 107 MB. Git LFS thì lọt về kích thước nhưng free tier chỉ có 1 GB storage và 1 GB băng thông/tháng — một lần phát hành đã ăn 214 MB, hết quota sau vài lượt tải. Releases không tính vào cả hai (2 GB/file, băng thông không giới hạn).
 
-**Lần đầu mở, Windows sẽ hiện cảnh báo SmartScreen** ("Windows protected your PC") vì file chưa được ký số. Bấm *More info → Run anyway*. Muốn hết cảnh báo phải mua code-signing certificate (~vài triệu/năm) — không bắt buộc để app chạy.
+Build tại máy để thử, không phát hành:
+
+```bash
+npm run build            # tạo cả 2 file trong dist/, không đẩy đi đâu
+```
+
+Version trong `package.json` phải khớp với tag, vì electron-builder tìm release theo version đó.
 
 Icon nằm ở `build/icon.ico` (7 kích thước 16–256px). Muốn đổi thì thay file đó rồi build lại.
 

@@ -1,0 +1,35 @@
+name: Release
+
+# Builds the Windows installers on GitHub's own Windows runner and attaches
+# them to the release for the pushed tag. Doing it here rather than locally
+# keeps a ~220 MB upload off the maintainer's connection, and means the
+# download links in the README are filled by the same commit they describe.
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+# electron-builder needs write access to create the release and upload assets.
+permissions:
+  contents: write
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - run: npm ci
+
+      # Publishes both targets to the release named by the tag. The version in
+      # package.json must match the tag, or electron-builder uploads to a
+      # release nobody linked to.
+      - run: npm run release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
