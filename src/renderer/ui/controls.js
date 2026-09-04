@@ -2,6 +2,7 @@
 
 import { presets, LAYOUTS } from '../visuals/registry.js';
 import { SCREEN } from './screens.js';
+import { LANGUAGES, t } from '../i18n/i18n.js';
 
 /** How long floating chrome stays up after the pointer stops moving. */
 const CHROME_VISIBLE_SECONDS = 2.5;
@@ -28,6 +29,7 @@ export class Controls {
    * @param {() => void} handlers.onStartVisualizing
    * @param {() => void} handlers.onOpenSettings
    * @param {() => void} handlers.onBack
+   * @param {(id: string) => void} handlers.onSelectLanguage
    * @param {() => void} handlers.onSkipSplash
    * @param {() => void} handlers.onEscape
    */
@@ -46,6 +48,7 @@ export class Controls {
       fullscreenButton: document.getElementById('btn-fullscreen'),
       layoutSelect: document.getElementById('layout-select'),
       cellSelect: document.getElementById('cell-select'),
+      languageActions: document.getElementById('language-actions'),
       canvas: document.getElementById('visualizer'),
     };
 
@@ -53,6 +56,7 @@ export class Controls {
 
     this._populatePresetOptions();
     this._populateLayoutOptions();
+    this._populateLanguageChoices();
     this._bindButtons();
     this._bindKeyboard();
     this._bindChromeReveal();
@@ -87,14 +91,46 @@ export class Controls {
   }
 
   _populateLayoutOptions() {
+    // Option text is a locale key, so this list is rebuilt on a language
+    // change rather than appended to once at construction.
+    const selected = this.dom.layoutSelect.value;
+    this.dom.layoutSelect.textContent = '';
     const fragment = document.createDocumentFragment();
     for (const layout of LAYOUTS) {
       const option = document.createElement('option');
       option.value = layout.id;
-      option.textContent = layout.label;
+      option.textContent = t(layout.labelKey);
       fragment.appendChild(option);
     }
     this.dom.layoutSelect.appendChild(fragment);
+    if (selected) this.dom.layoutSelect.value = selected;
+  }
+
+  /**
+   * The picker's buttons are built from the language list rather than written
+   * into the markup, so shipping another locale needs no change here. Their
+   * labels are autonyms and deliberately never pass through t().
+   */
+  _populateLanguageChoices() {
+    for (const language of LANGUAGES) {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'primary';
+      button.lang = language.id;
+      button.textContent = language.label;
+      button.addEventListener('click', () => this.handlers.onSelectLanguage(language.id));
+      this.dom.languageActions.appendChild(button);
+    }
+  }
+
+  /**
+   * Repaints the text this class builds itself. Markup-driven strings are
+   * handled by applyTranslations(); these are the ones assembled in JS.
+   */
+  retranslate() {
+    this._populateLayoutOptions();
+    this.setLayout(this.dom.layoutSelect.value, this.cellCount ?? 1);
+    this.setFullscreenActive(document.body.classList.contains('fullscreen'));
   }
 
   _bindButtons() {
@@ -233,7 +269,7 @@ export class Controls {
     for (let i = 0; i < cellCount; i += 1) {
       const option = document.createElement('option');
       option.value = String(i);
-      option.textContent = `Ô ${i + 1}`;
+      option.textContent = t('controls.cell', { n: i + 1 });
       this.dom.cellSelect.appendChild(option);
     }
     this.dom.cellSelect.classList.toggle('hidden', cellCount <= 1);
@@ -253,10 +289,12 @@ export class Controls {
    */
   setFullscreenActive(active) {
     document.body.classList.toggle('fullscreen', active);
-    this.dom.fullscreenButton.textContent = active ? 'Thoát toàn màn hình' : 'Toàn màn hình';
-    this.dom.fullscreenButton.title = active
-      ? 'Thoát toàn màn hình (F11)'
-      : 'Toàn màn hình (F11)';
+    this.dom.fullscreenButton.textContent = t(
+      active ? 'controls.exitFullscreen' : 'controls.fullscreen'
+    );
+    this.dom.fullscreenButton.title = t(
+      active ? 'controls.exitFullscreenTitle' : 'controls.fullscreenTitle'
+    );
     if (active) this.revealChrome(CHROME_INTRO_SECONDS);
   }
 

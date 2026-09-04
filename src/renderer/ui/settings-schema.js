@@ -1,6 +1,7 @@
 'use strict';
 
 import { LAYOUTS } from '../visuals/registry.js';
+import { LANGUAGES, DEFAULT_LANGUAGE, t } from '../i18n/i18n.js';
 
 /**
  * Every user-facing setting declared once: the control that edits it, its
@@ -8,34 +9,48 @@ import { LAYOUTS } from '../visuals/registry.js';
  * clamp to. The settings form is generated from this list, so adding a setting
  * means adding one entry here and reading `settings[key]` where it applies —
  * there is no second place listing the same fields.
+ *
+ * Text is stored as locale keys rather than finished strings: the form is
+ * rebuilt on a language change, and a field holding a string would still be
+ * showing the language the app started in.
  */
 export const SETTING_FIELDS = [
   {
-    key: 'layout',
-    group: 'Hiển thị',
-    label: 'Bố cục lưới',
-    hint: 'Số hiệu ứng vẽ cùng lúc.',
+    key: 'language',
+    groupKey: 'settings.group.language',
+    labelKey: 'settings.language.label',
+    hintKey: 'settings.language.hint',
     type: 'select',
-    options: LAYOUTS.map((layout) => ({ value: layout.id, label: layout.label })),
+    // Autonyms, so they read correctly whichever language is active.
+    options: LANGUAGES.map((language) => ({ value: language.id, label: language.label })),
+    default: DEFAULT_LANGUAGE,
+  },
+  {
+    key: 'layout',
+    groupKey: 'settings.group.display',
+    labelKey: 'settings.layout.label',
+    hintKey: 'settings.layout.hint',
+    type: 'select',
+    options: LAYOUTS.map((layout) => ({ value: layout.id, labelKey: layout.labelKey })),
     default: 'single',
   },
   {
     key: 'autoCycle',
-    group: 'Hiển thị',
-    label: 'Tự đổi hiệu ứng',
-    hint: 'Luân phiên sang hiệu ứng kế tiếp sau mỗi chu kỳ.',
+    groupKey: 'settings.group.display',
+    labelKey: 'settings.autoCycle.label',
+    hintKey: 'settings.autoCycle.hint',
     type: 'toggle',
     default: false,
   },
   {
     key: 'autoCycleSeconds',
-    group: 'Hiển thị',
-    label: 'Chu kỳ tự đổi',
+    groupKey: 'settings.group.display',
+    labelKey: 'settings.autoCycleSeconds.label',
     type: 'range',
     min: 5,
     max: 120,
     step: 5,
-    unit: 'giây',
+    unitKey: 'settings.unit.seconds',
     default: 20,
     // Greyed out while auto-cycling is off: a live slider that changes nothing
     // reads as broken.
@@ -43,9 +58,9 @@ export const SETTING_FIELDS = [
   },
   {
     key: 'sensitivity',
-    group: 'Âm thanh',
-    label: 'Độ nhạy',
-    hint: 'Tăng khi nhạc nhỏ mà hiệu ứng vẫn lẹt đẹt.',
+    groupKey: 'settings.group.audio',
+    labelKey: 'settings.sensitivity.label',
+    hintKey: 'settings.sensitivity.hint',
     type: 'range',
     min: 0.5,
     max: 2.5,
@@ -55,9 +70,9 @@ export const SETTING_FIELDS = [
   },
   {
     key: 'smoothing',
-    group: 'Âm thanh',
-    label: 'Độ mượt',
-    hint: 'Cao thì êm nhưng chậm phản ứng, thấp thì nảy và giật.',
+    groupKey: 'settings.group.audio',
+    labelKey: 'settings.smoothing.label',
+    hintKey: 'settings.smoothing.hint',
     type: 'range',
     min: 0,
     max: 0.95,
@@ -66,23 +81,23 @@ export const SETTING_FIELDS = [
   },
   {
     key: 'showSplash',
-    group: 'Khởi động',
-    label: 'Hiện màn hình chào',
+    groupKey: 'settings.group.startup',
+    labelKey: 'settings.showSplash.label',
     type: 'toggle',
     default: true,
   },
   {
     key: 'startInVisualizer',
-    group: 'Khởi động',
-    label: 'Mở thẳng vào hiệu ứng',
-    hint: 'Bỏ qua trang chủ khi mở app.',
+    groupKey: 'settings.group.startup',
+    labelKey: 'settings.startInVisualizer.label',
+    hintKey: 'settings.startInVisualizer.hint',
     type: 'toggle',
     default: false,
   },
 ];
 
 /** Field groups in declaration order, for the settings form's section headings. */
-export const SETTING_GROUPS = [...new Set(SETTING_FIELDS.map((f) => f.group))];
+export const SETTING_GROUPS = [...new Set(SETTING_FIELDS.map((f) => f.groupKey))];
 
 export const DEFAULT_SETTINGS = Object.fromEntries(
   SETTING_FIELDS.map((field) => [field.key, field.default])
@@ -119,8 +134,14 @@ export function normalizeSettings(raw) {
   return out;
 }
 
+/** The label to show for one option of a select field. */
+export function optionLabel(option) {
+  return option.labelKey ? t(option.labelKey) : option.label;
+}
+
 /** Formats a range value for the readout beside its slider. */
 export function formatSetting(field, value) {
   const rounded = field.step < 1 ? value.toFixed(2) : String(value);
-  return field.unit ? `${rounded} ${field.unit}` : rounded;
+  const unit = field.unitKey ? t(field.unitKey) : field.unit;
+  return unit ? `${rounded} ${unit}` : rounded;
 }

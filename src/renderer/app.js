@@ -13,6 +13,13 @@ import { Controls } from './ui/controls.js';
 import { ScreenManager, SCREEN } from './ui/screens.js';
 import { SettingsPanel } from './ui/settings-panel.js';
 import { normalizeSettings, DEFAULT_SETTINGS } from './ui/settings-schema.js';
+import {
+  applyTranslations,
+  getLanguage,
+  isLanguage,
+  setLanguage,
+  t,
+} from './i18n/i18n.js';
 
 /** How long the splash holds before handing over to the home screen. */
 const SPLASH_SECONDS = 1.8;
@@ -85,6 +92,7 @@ class VisualizerApp {
       onStartVisualizing: () => this.screens.show(SCREEN.VISUALIZE),
       onOpenSettings: () => this.screens.openSettings(),
       onBack: () => this.screens.back(),
+      onSelectLanguage: (id) => this.chooseLanguage(id),
       onSkipSplash: () => this.skipSplash(),
       onEscape: () => this.onEscape(),
     });
@@ -103,7 +111,10 @@ class VisualizerApp {
     ]);
 
     this.settings = normalizeSettings(stored);
-    this.settingsPanel.setValues(this.settings);
+    // normalizeSettings fills in a default, so the raw blob is the only place
+    // that still knows whether the user has ever answered the language picker.
+    this.languageChosen = isLanguage(stored?.language);
+    this._applyLanguage(this.settings.language);
 
     this.isOverlay = state.mode === 'overlay';
     this.renderer.setTransparent(this.isOverlay);
@@ -137,6 +148,9 @@ class VisualizerApp {
   _initialScreen(state) {
     if (this.isOverlay) return SCREEN.VISUALIZE;
     if (state.screen) return state.screen;
+    // Ahead of the splash and of startInVisualizer: on a first run the choice
+    // of language is the one thing that has to happen before anything else.
+    if (!this.languageChosen) return SCREEN.LANGUAGE;
     if (this.settings.startInVisualizer) return SCREEN.VISUALIZE;
     return this.settings.showSplash ? SCREEN.SPLASH : SCREEN.HOME;
   }
@@ -263,6 +277,26 @@ class VisualizerApp {
     this.screens.back();
   }
 
+  /** Answer from the first-run picker: keep it, then get out of the way. */
+  chooseLanguage(id) {
+    this.languageChosen = true;
+    this.applySetting('language', id);
+    this.screens.show(this.settings.startInVisualizer ? SCREEN.VISUALIZE : SCREEN.HOME);
+  }
+
+  /**
+   * Repaints the whole interface in `id`. Markup-driven text comes from the
+   * data-i18n attributes; the two components that build their own DOM are told
+   * to rebuild, and the form then gets its values back.
+   */
+  _applyLanguage(id) {
+    setLanguage(id);
+    applyTranslations();
+    this.controls.retranslate();
+    this.settingsPanel.retranslate();
+    this.settingsPanel.setValues(this.settings);
+  }
+
   /** An edit from the settings form: store it, then put it into effect. */
   applySetting(key, value) {
     this._persistSetting(key, value);
@@ -290,7 +324,9 @@ class VisualizerApp {
 
   /** Pushes the current settings into the audio path and the view. */
   _applyRuntimeSettings() {
-    const { sensitivity, smoothing, autoCycle, layout } = this.settings;
+    const { sensitivity, smoothing, autoCycle, layout, language } = this.settings;
+
+    if (getLanguage() !== language) this._applyLanguage(language);
 
     this.analyzer.sensitivity = sensitivity;
     this.engine.setSmoothing(smoothing);
@@ -415,12 +451,12 @@ class VisualizerApp {
 /** Maps the handful of failure modes onto messages the user can act on. */
 function describeError(error) {
   if (error?.name === 'NotAllowedError') {
-    return 'Bạn đã từ chối quyền chia sẻ. Bấm "Thử lại" và chấp nhận để app đọc được âm thanh hệ thống.';
+    return t('error.denied');
   }
   if (error?.message === 'NO_AUDIO_TRACK') {
-    return 'Không nhận được luồng âm thanh hệ thống. Kiểm tra thiết bị phát mặc định trong Windows rồi thử lại.';
+    return t('error.noStream');
   }
-  return `Lỗi khi khởi tạo âm thanh: ${error?.message ?? error}`;
+  return t('error.generic', { message: error?.message ?? error });
 }
 
 const app = new VisualizerApp();

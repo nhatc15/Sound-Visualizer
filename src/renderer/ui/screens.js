@@ -1,8 +1,9 @@
 'use strict';
 
-/** @enum {string} The four things the window can be showing. */
+/** @enum {string} The things the window can be showing. */
 export const SCREEN = {
   SPLASH: 'splash',
+  LANGUAGE: 'language',
   HOME: 'home',
   SETTINGS: 'settings',
   VISUALIZE: 'visualize',

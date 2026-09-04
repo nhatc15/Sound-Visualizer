@@ -64,11 +64,11 @@ export function wrapIndex(index) {
  * path does not need a separate branch for "normal" viewing.
  */
 export const LAYOUTS = [
-  { id: 'single', label: '1 hiệu ứng', cols: 1, rows: 1 },
-  { id: 'duo', label: '2 hiệu ứng', cols: 1, rows: 2 },
-  { id: 'quad', label: '4 hiệu ứng', cols: 2, rows: 2 },
-  { id: 'six', label: '6 hiệu ứng', cols: 3, rows: 2 },
-  { id: 'nine', label: '9 hiệu ứng', cols: 3, rows: 3 },
+  { id: 'single', labelKey: 'layout.single', cols: 1, rows: 1 },
+  { id: 'duo', labelKey: 'layout.duo', cols: 1, rows: 2 },
+  { id: 'quad', labelKey: 'layout.quad', cols: 2, rows: 2 },
+  { id: 'six', labelKey: 'layout.six', cols: 3, rows: 2 },
+  { id: 'nine', labelKey: 'layout.nine', cols: 3, rows: 3 },
 ];
 
 export function layoutById(id) {

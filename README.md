@@ -62,6 +62,14 @@ Version trong `package.json` phải khớp với tag, vì electron-builder tìm 
 
 Icon nằm ở `build/icon.ico` (7 kích thước 16–256px). Muốn đổi thì thay file đó rồi build lại.
 
+## Ngôn ngữ
+
+Lần đầu mở app hiện màn hình chọn **Tiếng Việt** hoặc **English** trước cả màn hình chào. Chọn xong là nhớ luôn, những lần sau vào thẳng.
+
+Đổi lại bất cứ lúc nào ở **Cài đặt → Ngôn ngữ**; toàn bộ giao diện dịch ngay, không cần mở lại app. Tên 24 hiệu ứng (Neon Wave, Midnight Drive…) là tên riêng nên giữ nguyên ở cả hai ngôn ngữ.
+
+Thêm ngôn ngữ mới: chép `src/renderer/i18n/locales/vi.js` thành file mới, dịch phần giá trị, rồi thêm một dòng vào `LANGUAGES` trong `src/renderer/i18n/i18n.js`. Nút chọn và mục trong Cài đặt tự sinh từ danh sách đó. Khoá nào thiếu thì rơi về tiếng Việt.
+
 ## Điều khiển
 
 | Thao tác | Phím / Nút |
@@ -161,6 +169,7 @@ src/
     main.js              # vòng đời app, IPC, phím tắt toàn cục
     window-manager.js    # cửa sổ thường <-> overlay (dựng lại window)
     loopback-audio.js    # handler trả về stream loopback
+    settings-store.js    # đọc/ghi settings.json trong userData
   preload/preload.js     # cầu IPC (contextIsolation)
   renderer/
     app.js               # điều phối: audio -> phân tích -> vẽ
@@ -173,7 +182,14 @@ src/
       canvas-renderer.js    # canvas, DPR, vẽ lưới nhiều ô
       draw-utils.js         # palette, gradient, glow
       *-presets.js          # cài đặt nhóm phổ neon (1–16)
-    ui/controls.js       # nút, dropdown, phím tắt
+    i18n/
+      i18n.js               # t(), đổi ngôn ngữ, dịch DOM theo data-i18n
+      locales/              # mỗi ngôn ngữ một bảng khoá -> chuỗi
+    ui/
+      controls.js           # nút, dropdown, phím tắt
+      screens.js            # splash / ngôn ngữ / trang chủ / cài đặt / xem
+      settings-panel.js     # dựng form Cài đặt từ schema
+      settings-schema.js    # khai báo mọi setting một lần
 ```
 
 ## Lưu ý

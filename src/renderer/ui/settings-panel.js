@@ -4,7 +4,9 @@ import {
   SETTING_FIELDS,
   SETTING_GROUPS,
   formatSetting,
+  optionLabel,
 } from './settings-schema.js';
+import { t } from '../i18n/i18n.js';
 
 /**
  * Builds the settings form from the schema and reports edits upward. Holds no
@@ -29,16 +31,23 @@ export class SettingsPanel {
       .addEventListener('click', () => this.handlers.onReset());
   }
 
+  /** Rebuilds the form in the current language; the app re-applies values. */
+  retranslate() {
+    this.body.textContent = '';
+    this.controls.clear();
+    this._build();
+  }
+
   _build() {
     for (const group of SETTING_GROUPS) {
       const section = document.createElement('section');
       section.className = 'settings-group';
 
       const heading = document.createElement('h3');
-      heading.textContent = group;
+      heading.textContent = t(group);
       section.appendChild(heading);
 
-      for (const field of SETTING_FIELDS.filter((f) => f.group === group)) {
+      for (const field of SETTING_FIELDS.filter((f) => f.groupKey === group)) {
         section.appendChild(this._buildRow(field));
       }
 
@@ -54,14 +63,14 @@ export class SettingsPanel {
     text.className = 'settings-text';
 
     const label = document.createElement('label');
-    label.textContent = field.label;
+    label.textContent = t(field.labelKey);
     label.htmlFor = `set-${field.key}`;
     text.appendChild(label);
 
-    if (field.hint) {
+    if (field.hintKey) {
       const hint = document.createElement('p');
       hint.className = 'settings-hint';
-      hint.textContent = field.hint;
+      hint.textContent = t(field.hintKey);
       text.appendChild(hint);
     }
     row.appendChild(text);
@@ -91,7 +100,7 @@ export class SettingsPanel {
       for (const option of field.options) {
         const el = document.createElement('option');
         el.value = option.value;
-        el.textContent = option.label;
+        el.textContent = optionLabel(option);
         select.appendChild(el);
       }
       select.addEventListener('change', (e) =>

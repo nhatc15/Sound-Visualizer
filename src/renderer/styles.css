@@ -389,6 +389,7 @@ body.overlay #stage {
 }
 
 body[data-screen='splash'] #splash,
+body[data-screen='language'] #language,
 body[data-screen='home'] #home,
 body[data-screen='settings'] #settings {
   display: flex;
@@ -404,6 +405,7 @@ body[data-screen='settings'] #settings {
 /* Each screen brings its own scrim rather than dimming the canvas globally,
    which keeps the visuals alive underneath but never competing with the text. */
 #splash,
+#language,
 #home {
   background: radial-gradient(
     120% 90% at 50% 45%,

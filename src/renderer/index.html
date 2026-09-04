@@ -14,8 +14,8 @@
       <header id="titlebar">
         <span class="title">Sound Visualizer</span>
         <div class="window-buttons">
-          <button id="btn-minimize" title="Thu nhỏ" aria-label="Thu nhỏ">&#8211;</button>
-          <button id="btn-close" class="danger" title="Đóng" aria-label="Đóng">&#10005;</button>
+          <button id="btn-minimize" data-i18n-title="titlebar.minimize" data-i18n-aria="titlebar.minimize">&#8211;</button>
+          <button id="btn-close" class="danger" data-i18n-title="titlebar.close" data-i18n-aria="titlebar.close">&#10005;</button>
         </div>
       </header>
 
@@ -27,75 +27,79 @@
             <span></span><span></span><span></span><span></span><span></span>
           </div>
           <h1 class="splash-title">Sound Visualizer</h1>
-          <p class="splash-tagline">Hiệu ứng theo âm thanh hệ thống, theo thời gian thực</p>
+          <p class="splash-tagline" data-i18n="splash.tagline"></p>
+        </div>
+
+        <div id="language" class="screen">
+          <div class="home-panel">
+            <h1 class="home-title" data-i18n="language.title"></h1>
+            <p class="home-subtitle" data-i18n="language.subtitle"></p>
+            <div class="home-actions" id="language-actions"></div>
+          </div>
         </div>
 
         <div id="home" class="screen">
           <div class="home-panel">
             <h1 class="home-title">Sound Visualizer</h1>
-            <p class="home-subtitle">
-              16 hiệu ứng neon chạy theo đúng thứ máy bạn đang phát.
-            </p>
+            <p class="home-subtitle" data-i18n="home.subtitle"></p>
             <div class="home-actions">
-              <button id="btn-home-start" class="primary">Bắt đầu</button>
-              <button id="btn-home-settings">Cài đặt</button>
-              <button id="btn-home-quit" class="quiet">Thoát</button>
+              <button id="btn-home-start" class="primary" data-i18n="home.start"></button>
+              <button id="btn-home-settings" data-i18n="home.settings"></button>
+              <button id="btn-home-quit" class="quiet" data-i18n="home.quit"></button>
             </div>
-            <p class="home-hint">
-              Đang xem hiệu ứng? Bấm <kbd>Esc</kbd> để về đây bất cứ lúc nào.
-            </p>
+            <p class="home-hint" data-i18n-html="home.hint"></p>
           </div>
         </div>
 
         <div id="settings" class="screen">
           <div class="settings-panel">
             <header class="settings-head">
-              <h2>Cài đặt</h2>
-              <button id="btn-settings-back" title="Quay lại (Esc)">Xong</button>
+              <h2 data-i18n="settings.title"></h2>
+              <button id="btn-settings-back" data-i18n="settings.done" data-i18n-title="settings.back"></button>
             </header>
             <div id="settings-body"></div>
             <footer class="settings-foot">
-              <button id="btn-settings-reset" class="quiet">Đặt lại mặc định</button>
+              <button id="btn-settings-reset" class="quiet" data-i18n="settings.reset"></button>
             </footer>
           </div>
         </div>
 
         <div id="error" class="overlay-panel hidden">
-          <h2>Không bắt được âm thanh</h2>
+          <h2 data-i18n="error.title"></h2>
           <p id="error-message"></p>
-          <button id="btn-retry" class="primary">Thử lại</button>
+          <button id="btn-retry" class="primary" data-i18n="error.retry"></button>
         </div>
 
-        <div id="silence-hint" class="floating-hint hidden">Chưa có âm thanh nào đang phát</div>
+        <div id="silence-hint" class="floating-hint hidden" data-i18n="silence.hint"></div>
       </main>
 
       <footer id="controls">
-        <button id="btn-home" class="icon" title="Về trang chủ (Esc)" aria-label="Về trang chủ">&#8962;</button>
-        <button id="btn-prev" title="Hiệu ứng trước (←)" aria-label="Hiệu ứng trước">&#9664;</button>
-        <select id="preset-select" aria-label="Chọn hiệu ứng"></select>
-        <button id="btn-next" title="Hiệu ứng sau (→)" aria-label="Hiệu ứng sau">&#9654;</button>
+        <button id="btn-home" class="icon" data-i18n-title="controls.homeTitle" data-i18n-aria="controls.home">&#8962;</button>
+        <button id="btn-prev" data-i18n-title="controls.prevTitle" data-i18n-aria="controls.prev">&#9664;</button>
+        <select id="preset-select" data-i18n-aria="controls.presetSelect"></select>
+        <button id="btn-next" data-i18n-title="controls.nextTitle" data-i18n-aria="controls.next">&#9654;</button>
 
-        <select id="layout-select" aria-label="Số hiệu ứng hiển thị cùng lúc" title="Số hiệu ứng hiển thị cùng lúc (G)"></select>
-        <select id="cell-select" class="hidden" aria-label="Chọn ô để đổi hiệu ứng" title="Ô đang chỉnh — hoặc bấm thẳng vào ô trên màn hình"></select>
+        <select id="layout-select" data-i18n-aria="controls.layoutSelect" data-i18n-title="controls.layoutSelectTitle"></select>
+        <select id="cell-select" class="hidden" data-i18n-aria="controls.cellSelect" data-i18n-title="controls.cellSelectTitle"></select>
 
         <span class="spacer"></span>
 
         <label class="toggle">
           <input type="checkbox" id="chk-auto" />
-          <span>Tự đổi</span>
+          <span data-i18n="controls.auto"></span>
         </label>
-        <button id="btn-settings" class="icon" title="Cài đặt" aria-label="Cài đặt">&#9881;</button>
-        <button id="btn-overlay" title="Chế độ overlay nổi (Ctrl+O)">Overlay</button>
-        <button id="btn-fullscreen" title="Toàn màn hình (F11)">Toàn màn hình</button>
+        <button id="btn-settings" class="icon" data-i18n-title="controls.settings" data-i18n-aria="controls.settings">&#9881;</button>
+        <button id="btn-overlay" data-i18n="controls.overlay" data-i18n-title="controls.overlayTitle"></button>
+        <button id="btn-fullscreen" data-i18n="controls.fullscreen" data-i18n-title="controls.fullscreenTitle"></button>
       </footer>
 
       <div id="overlay-bar">
         <span id="overlay-preset-name"></span>
-        <button id="btn-overlay-prev" title="Hiệu ứng trước">&#9664;</button>
-        <button id="btn-overlay-next" title="Hiệu ứng sau">&#9654;</button>
-        <button id="btn-overlay-fullscreen" title="Toàn màn hình (F11)">&#9974;</button>
-        <button id="btn-overlay-exit" class="labelled" title="Về cửa sổ thường (Ctrl+O hoặc Alt+Shift+O)">Cửa sổ</button>
-        <button id="btn-overlay-close" class="danger" title="Đóng">&#10005;</button>
+        <button id="btn-overlay-prev" data-i18n-title="overlay.prev">&#9664;</button>
+        <button id="btn-overlay-next" data-i18n-title="overlay.next">&#9654;</button>
+        <button id="btn-overlay-fullscreen" data-i18n-title="overlay.fullscreen">&#9974;</button>
+        <button id="btn-overlay-exit" class="labelled" data-i18n="overlay.window" data-i18n-title="overlay.windowTitle"></button>
+        <button id="btn-overlay-close" class="danger" data-i18n-title="overlay.close">&#10005;</button>
       </div>
     </div>
 
