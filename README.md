@@ -30,7 +30,19 @@ Mỗi bản ~107 MB. Hai link trên luôn trỏ tới **bản phát hành mới 
 
 Cài theo từng user (`%LOCALAPPDATA%`), **không cần quyền admin**.
 
-**Lần đầu mở, Windows sẽ hiện cảnh báo SmartScreen** ("Windows protected your PC") vì file chưa được ký số. Bấm *More info → Run anyway*. Muốn hết cảnh báo phải mua code-signing certificate (~vài triệu/năm) — không bắt buộc để app chạy.
+### Cảnh báo "Windows protected your PC"
+
+Lần đầu mở, Windows chặn bằng màn hình xanh của SmartScreen. Bấm **More info → Run anyway** là chạy được, không cần quyền admin.
+
+Nguyên nhân là file **chưa được ký số**, không phải app có vấn đề: Windows cảnh báo với mọi `.exe` chưa ký tải từ internet, bất kể bên trong là gì. Kiểm chứng được — chuột phải file → *Properties* → tab *Digital Signatures* trống rỗng.
+
+Gỡ hẳn cảnh báo thì phải mua code-signing certificate. Từ 06/2023 khoá riêng bắt buộc nằm trên phần cứng chuẩn FIPS 140-2 L2 nên loại chứng thư rẻ ngày xưa không còn; hiện rẻ nhất là Azure Trusted Signing khoảng 10 USD/tháng kèm xác minh danh tính mất vài ngày. Đang cân nhắc, chưa làm.
+
+Trong lúc đó, muốn chắc file tải về đúng là bản GitHub Actions build ra chứ không bị ai thay giữa đường, đối chiếu với `SHA256SUMS.txt` đính kèm mỗi release:
+
+```powershell
+Get-FileHash .\Sound-Visualizer-Setup.exe -Algorithm SHA256
+```
 
 ## Chạy từ source
 
