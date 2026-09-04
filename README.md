@@ -2,6 +2,23 @@
 
 Ứng dụng Windows trực quan hoá **âm thanh máy đang phát** (Spotify, YouTube, game, bất kỳ nguồn nào) với 24 hiệu ứng: 16 hiệu ứng neon phổ và 8 hiệu ứng dựng theo chủ đề nhạc.
 
+## Ảnh chụp
+
+![Hiệu ứng 1 Neon Wave: một đường waveform phát sáng chuyển màu cam sang xanh lá trên nền tím than](docs/screenshots/neon-wave.png)
+
+|  |  |
+|---|---|
+| ![Cảnh hoàng hôn city pop với mặt trời vàng bị rãnh cắt ngang, skyline và sàn lưới chạy về phía chân trời](docs/screenshots/midnight-drive.png)<br>**20. Midnight Drive** — City Pop | ![Lõi lục giác xanh lá bắn tia laser tím ra mọi hướng, quanh là các vòng sốc hình vuông](docs/screenshots/drop-core.png)<br>**22. Drop Core** — EDM |
+| ![Đĩa than đen quay bên trái, kim VU vàng bên phải, nền chấm halftone và chuỗi hạt vàng dưới đáy](docs/screenshots/boom-bap.png)<br>**24. Boom Bap** — Hip hop | ![Hàng thanh dọc mảnh chuyển màu xanh dương sang xanh ngọc, đối xứng qua trục giữa](docs/screenshots/thin-bars.png)<br>**5. Thin Bars** — nhóm phổ neon |
+
+Chế độ lưới: sáu hiệu ứng khác nhau chạy thật cùng lúc trên cùng một luồng âm thanh, mỗi ô có nhãn tên ở góc.
+
+![Cửa sổ chia sáu ô, mỗi ô một hiệu ứng khác nhau kèm nhãn tên](docs/screenshots/grid-six.png)
+
+Màn hình chính, với hiệu ứng vẫn chạy mờ phía sau.
+
+![Màn hình chính có tiêu đề Sound Visualizer và ba nút Bắt đầu, Cài đặt, Thoát](docs/screenshots/home.png)
+
 ## Tải về
 
 | Bản | Link | Dành cho |
