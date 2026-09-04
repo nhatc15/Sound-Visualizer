@@ -27,9 +27,35 @@ jobs:
 
       - run: npm ci
 
-      # Publishes both targets to the release named by the tag. The version in
-      # package.json must match the tag, or electron-builder uploads to a
-      # release nobody linked to.
+      # electron-builder uploads to the release named by the tag, so a
+      # package.json version that disagrees with the tag silently scatters the
+      # installers across two releases. Fail here instead.
+      - name: Check package version matches tag
+        if: startsWith(github.ref, 'refs/tags/')
+        shell: bash
+        run: |
+          tag="${GITHUB_REF_NAME#v}"
+          pkg="$(node -p "require('./package.json').version")"
+          if [ "$tag" != "$pkg" ]; then
+            echo "tag v$tag does not match package.json $pkg" >&2
+            exit 1
+          fi
+
+      # The nsis and portable targets publish in parallel, and each one creates
+      # the release when it is missing. On a fresh tag both POST /releases at
+      # once and the loser dies with 422 already_exists after its assets are
+      # already up. Creating the release first leaves both publishers with
+      # nothing to do but upload.
+      - name: Ensure release exists
+        if: startsWith(github.ref, 'refs/tags/')
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1 ||
+            gh release create "$GITHUB_REF_NAME" --verify-tag \
+              --title "$GITHUB_REF_NAME" --generate-notes
+
       - run: npm run release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
